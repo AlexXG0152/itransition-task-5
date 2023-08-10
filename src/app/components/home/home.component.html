@@ -1,0 +1,71 @@
+<h1 class="d-flex justify-content-center mt-3 mb-5">RANDOM DATA GENERATOR</h1>
+
+<div class="container d-flex justify-content-evenly align-items-center">
+  <div class="row">
+    <div class="col me-3">
+      <div class="form-floating">
+        <select class="form-select" id="floatingSelect" aria-label="Floating label select example">
+          <option selected>Region</option>
+          <option value="1">Belarus</option>
+          <option value="2">Nigeria</option>
+          <option value="3">USA</option>
+        </select>
+        <label for="floatingSelect">Click for select region</label>
+      </div>
+    </div>
+    <div class="col-4 me-3">
+      <div class="input-group">
+        <span class="input-group-text">Errors Qt.</span>
+        <div class="form-floating">
+          <input type="range" class="form-control" id="errorsSlider" min="0" max="10" step="1" value="0">
+          <label for="customRange1" class="form-label"></label>
+        </div>
+        <span class="input-group-text" id="errorsSliderValue">0</span>
+      </div>
+    </div>
+    <div class="col me-3">
+      <div class="input-group">
+        <span class="input-group-text">Errors Qt.</span>
+        <div class="form-floating">
+          <input type="number" class="form-control" id="errorsInput" min="0" max="10000" value="">
+          <label for="errorsInput">Errors Qt.</label>
+        </div>
+      </div>
+    </div>
+    <div class="col me-3">
+      <div class="input-group">
+        <span class="input-group-text">Seed</span>
+        <div class="form-floating">
+          <input type="text" class="form-control" id="seedInput">
+          <label for="seedInput">Seed</label>
+        </div>
+        <button type="button" class="btn btn-outline-secondary" id="random-button">Random</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div infinite-scroll [infiniteScrollDistance]="distance" [infiniteScrollThrottle]="throttle" (scrolled)="onScroll()">
+  <table class="table mt-5">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col" id="id-col">ID</th>
+        <th scope="col">FULL NAME</th>
+        <th scope="col">ADDRESS</th>
+        <th scope="col">PHONE</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of tableData; let i = index">
+        <th scope="row">{{user.number}}</th>
+        <td>{{user.userId}}</td>
+        <td>{{user.fullname}}</td>
+        <td>{{user.address}}</td>
+        <td>{{user.phone}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
