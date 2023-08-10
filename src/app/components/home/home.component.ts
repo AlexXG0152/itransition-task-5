@@ -13,19 +13,30 @@ export class HomeComponent implements OnInit {
   distance = 2;
   page = 1;
 
-  tableData?: IUser[] = this.userService.users
+  dropDownData: string[] = [
+    'Region',
+    ...this.userService.countries.map((country) => Object.keys(country)[0]),
+  ];
+
+  state: string = this.dropDownData[1];
+
+  tableData?: IUser[] = this.userService.users;
 
   ngOnInit(): void {
-    this.userService.generateUsers(10)
-    console.log(this.userService.generateUsers(10));
+    // this.userService.generateUsers(10, this.state);
+  }
+
+  onOptionsSelected(value: string) {
+    this.userService.clearUsers()
+    this.userService.generateUsers(10, value);
+    return (this.state = value);
   }
 
   onScroll(): void {
-    this.userService
-      .generateUsers(10)
+    this.userService.generateUsers(10, this.state);
 
-      // .subscribe((commentaries: Comment[]) => {
-      //   this.userService.users.push(...commentaries);
-      // });
+    // .subscribe((commentaries: Comment[]) => {
+    //   this.userService.users.push(...commentaries);
+    // });
   }
 }

@@ -4,13 +4,13 @@
   <div class="row">
     <div class="col me-3">
       <div class="form-floating">
-        <select class="form-select" id="floatingSelect" aria-label="Floating label select example">
-          <option selected>Region</option>
-          <option value="1">Belarus</option>
-          <option value="2">Nigeria</option>
-          <option value="3">USA</option>
+
+        <select class="form-select" id="floatingSelect" aria-label="Floating label select example" #countrySelect
+          (change)="onOptionsSelected(countrySelect.value)">
+          <option class="option" *ngFor="let option of dropDownData; let i = index" [value]="option">{{option}}</option>
         </select>
         <label for="floatingSelect">Click for select region</label>
+
       </div>
     </div>
     <div class="col-4 me-3">
