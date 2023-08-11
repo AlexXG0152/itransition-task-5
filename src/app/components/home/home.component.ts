@@ -39,9 +39,10 @@ export class HomeComponent {
     if (value === 'Region') {
       return;
     }
-    this.state = value;
-    this.userService.faker.seed(this.storageService.getSeed() || 0);
 
+    this.state = value;
+
+    this.userService.faker.seed(this.storageService.getSeed() || 0);
     this.userService.generateUsers(20, value);
   }
 
@@ -67,7 +68,6 @@ export class HomeComponent {
   }
 
   onScroll(): void {
-    // this.seed += 1
     this.userService.generateUsers(10, this.state);
 
     // .subscribe((newUsers: IUser[]) => {

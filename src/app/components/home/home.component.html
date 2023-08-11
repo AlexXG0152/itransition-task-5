@@ -50,6 +50,7 @@
 
 <div infinite-scroll [infiniteScrollDistance]="distance" [infiniteScrollThrottle]="throttle" (scrolled)="onScroll()">
   <ng-container *ngIf="tableData!.length > 0">
+    <app-download-csv></app-download-csv>
     <table class="table mt-5">
       <thead>
         <tr>
