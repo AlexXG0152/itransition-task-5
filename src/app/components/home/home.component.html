@@ -37,11 +37,11 @@
       <div class="input-group">
         <span class="input-group-text">Seed</span>
         <div class="form-floating">
-          <input type="text" class="form-control" id="seedInput" [(ngModel)]="this.seed">
+          <input type="text" class="form-control" id="seedInput" [(ngModel)]="this.seed" (change)="onSeedEnter(this.seedValue.value)" #seedValue>
           <label for="seedInput">Seed</label>
         </div>
         <button type="button" class="btn btn-outline-secondary" id="random-button"
-          (click)="onRandomClick(this.seed)">Random</button>
+          (click)="onRandomClick()">Random</button>
       </div>
     </div>
   </div>

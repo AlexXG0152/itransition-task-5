@@ -1,25 +1,14 @@
 import { Injectable } from '@angular/core';
-import {
-  Faker,
-  SexType,
-  en,
-  en_US,
-  pl,
-  fakerPL,
-  de,
-  it,
-  LocaleDefinition,
-} from '@faker-js/faker';
+import { Faker, SexType, en, pl, it, LocaleDefinition } from '@faker-js/faker';
 import { IUser } from '../interfaces/user.interface';
 import { ICountry } from '../interfaces/country.interface';
+import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  constructor() {}
-
-  faker!: Faker;
+  constructor(private storageService: StorageService) {}
 
   countries: ICountry[] = [
     {
@@ -31,7 +20,7 @@ export class UserService {
         'U.S.A.',
         'United States of America',
       ],
-      locale: [en, en_US],
+      locale: [en],
     },
     {
       name: 'Italy',
@@ -59,6 +48,11 @@ export class UserService {
 
   users: IUser[] = [];
 
+  // faker!: Faker;
+  faker: Faker = new Faker({
+    locale: [en],
+  });
+
   initFaker(locale: any): Faker {
     return new Faker({
       locale: locale,
@@ -69,13 +63,11 @@ export class UserService {
     this.users.length = 0;
   }
 
-  generateUser(locale: LocaleDefinition[], stateNames: string[]): IUser {
-    const gender = `${this.generateGender()}`;
+  createUser(locale: LocaleDefinition[], stateNames: string[]): IUser {
     return {
       number: this.users.length + 1,
       userId: this.faker.string.uuid(),
-      gender: gender,
-      fullname: this.generateFullName(locale, gender),
+      fullname: this.generateFullName(locale, this.faker.person.sex()),
       address: this.generateAddress(
         locale,
         this.generateDirection(locale),
@@ -87,27 +79,22 @@ export class UserService {
     };
   }
 
-  generateUsers(seed:number, qt: number, state: string): IUser[] {
+  generateUsers(qt: number, state: string): void {
     const countryNames = this.getCountryNames(state);
     const locale = this.getCountryLocale(state);
 
-    this.faker = this.initFaker(locale);
-    this.faker.seed(seed)
+    // if (!this.faker) {
+    //   this.faker = this.initFaker(locale);
+    // }
 
+    // this.faker.seed(this.storageService.getSeed());
     for (let index = 0; index < qt; index++) {
-      this.users.push(this.generateUser(locale, countryNames));
+      this.users.push(this.createUser(locale, countryNames));
     }
-    return this.users;
   }
 
   getRandomFromArray(item: any, qt: number) {
     return `${this.faker.helpers.arrayElements([...item], qt)}`;
-  }
-
-  generateGender(): string {
-    return ['female', 'male'][
-      Math.floor(Math.random() * ['female', 'male'].length)
-    ];
   }
 
   generatePrefix(gender: string): string {
@@ -133,17 +120,7 @@ export class UserService {
   }
 
   generateFullName(locale: LocaleDefinition[], gender: string) {
-    if (locale[0].metadata?.code === 'en') {
-      return `${this.generatePrefix(gender)} ${this.generateFirstName(
-        gender
-      )} ${
-        this.generateMiddleName(gender)
-          ? this.generateMiddleName(gender) + ' '
-          : ''
-      }${this.generateLastName(gender)}`.trim();
-    } else {
-      return `${this.faker.person.fullName({ sex: gender as SexType })}`.trim();
-    }
+    return `${this.faker.person.fullName({ sex: gender as SexType })}`.trim();
   }
 
   generateDirection(locale: LocaleDefinition[]): string {
@@ -210,7 +187,9 @@ export class UserService {
         this.faker.location.zipCode('#####'),
       ],
       1
-    )}, ${this.choiseCountryNames(countryNames)}`.replaceAll(', , ', ', ').replaceAll(',,', ',');
+    )}, ${this.choiseCountryNames(countryNames)}`
+      .replaceAll(', , ', ', ')
+      .replaceAll(',,', ',');
   }
 
   generatePhoneNumber(): string {
