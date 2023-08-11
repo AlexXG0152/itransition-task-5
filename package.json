@@ -1,0 +1,42 @@
+{
+  "name": "itransition-task-5",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "ng serve",
+    "build": "ng build --aot --configuration production",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^16.1.8",
+    "@angular/common": "^16.1.8",
+    "@angular/compiler": "^16.1.8",
+    "@angular/core": "^16.1.8",
+    "@angular/forms": "^16.1.8",
+    "@angular/platform-browser": "^16.1.8",
+    "@angular/platform-browser-dynamic": "^16.1.8",
+    "@angular/router": "^16.1.8",
+    "ngx-infinite-scroll": "^16.0.0",
+    "rxjs": "~7.8.1",
+    "tslib": "^2.6.1",
+    "zone.js": "~0.13.1"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^16.1.7",
+    "@angular/cli": "~16.1.7",
+    "@angular/compiler-cli": "^16.1.8",
+    "@faker-js/faker": "^8.0.2",
+    "@types/jasmine": "~4.3.5",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.2",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.1",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~4.9.5"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
