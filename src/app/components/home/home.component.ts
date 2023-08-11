@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { IUser } from 'src/app/interfaces/iuser';
+import { IUser } from 'src/app/interfaces/user.interface';
 import { UserService } from 'src/app/services/user.service';
 
 @Component({
@@ -15,8 +15,11 @@ export class HomeComponent implements OnInit {
 
   dropDownData: string[] = [
     'Region',
-    ...this.userService.countries.map((country) => Object.keys(country)[0]),
+    ...this.userService.countries.map((country) => country.name),
   ];
+
+  errorsQt: Event | number = 0;
+  seed: number = 0;
 
   state: string = this.dropDownData[1];
 
@@ -26,17 +29,28 @@ export class HomeComponent implements OnInit {
     // this.userService.generateUsers(10, this.state);
   }
 
-  onOptionsSelected(value: string) {
-    this.userService.clearUsers()
-    this.userService.generateUsers(10, value);
+  onOptionsSelected(value: string): string | undefined {
+    this.userService.clearUsers();
+
+    if (value === 'Region') {
+      return;
+    }
+
+    this.userService.generateUsers(this.seed, 10, value);
     return (this.state = value);
   }
 
-  onScroll(): void {
-    this.userService.generateUsers(10, this.state);
+  onRandomClick(max: number): number {
+    console.log(Math.floor(Math.random() * max));
 
-    // .subscribe((commentaries: Comment[]) => {
-    //   this.userService.users.push(...commentaries);
+    return Math.floor(Math.random() * max);
+  }
+
+  onScroll(): void {
+    this.userService.generateUsers(this.seed, 10, this.state);
+
+    // .subscribe((newUsers: IUser[]) => {
+    //   this.userService.users.push(...newUsers);
     // });
   }
 }

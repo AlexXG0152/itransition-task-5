@@ -17,17 +17,18 @@
       <div class="input-group">
         <span class="input-group-text">Errors Qt.</span>
         <div class="form-floating">
-          <input type="range" class="form-control" id="errorsSlider" min="0" max="10" step="1" value="0">
-          <label for="customRange1" class="form-label"></label>
+          <input type="range" class="form-control slider" id="errorsSlider" min="0" max="10" step="0.25" value="0"
+            [(ngModel)]="this.errorsQt">
+          <label for="customRange1" class="form-label">{{this.errorsQt}}</label>
         </div>
-        <span class="input-group-text" id="errorsSliderValue">0</span>
       </div>
     </div>
     <div class="col me-3">
       <div class="input-group">
         <span class="input-group-text">Errors Qt.</span>
         <div class="form-floating">
-          <input type="number" class="form-control" id="errorsInput" min="0" max="10000" value="">
+          <input type="number" class="form-control" id="errorsInput" min="0" max="10000" value="{{this.errorsQt}}"
+            [(ngModel)]="this.errorsQt">
           <label for="errorsInput">Errors Qt.</label>
         </div>
       </div>
@@ -36,10 +37,11 @@
       <div class="input-group">
         <span class="input-group-text">Seed</span>
         <div class="form-floating">
-          <input type="text" class="form-control" id="seedInput">
+          <input type="text" class="form-control" id="seedInput" [(ngModel)]="this.seed">
           <label for="seedInput">Seed</label>
         </div>
-        <button type="button" class="btn btn-outline-secondary" id="random-button">Random</button>
+        <button type="button" class="btn btn-outline-secondary" id="random-button"
+          (click)="onRandomClick(this.seed)">Random</button>
       </div>
     </div>
   </div>
@@ -47,25 +49,27 @@
 
 
 <div infinite-scroll [infiniteScrollDistance]="distance" [infiniteScrollThrottle]="throttle" (scrolled)="onScroll()">
-  <table class="table mt-5">
-    <thead>
-      <tr>
-        <th scope="col">#</th>
-        <th scope="col" id="id-col">ID</th>
-        <th scope="col">FULL NAME</th>
-        <th scope="col">ADDRESS</th>
-        <th scope="col">PHONE</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let user of tableData; let i = index">
-        <th scope="row">{{user.number}}</th>
-        <td>{{user.userId}}</td>
-        <td>{{user.fullname}}</td>
-        <td>{{user.address}}</td>
-        <td>{{user.phone}}</td>
-      </tr>
-    </tbody>
-  </table>
+  <ng-container *ngIf="tableData!.length > 0">
+    <table class="table mt-5">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col" id="id-col">ID</th>
+          <th scope="col">FULL NAME</th>
+          <th scope="col">ADDRESS</th>
+          <th scope="col">PHONE</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of tableData; let i = index">
+          <th scope="row">{{user.number}}</th>
+          <td>{{user.userId}}</td>
+          <td>{{user.fullname}}</td>
+          <td>{{user.address}}</td>
+          <td>{{user.phone}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </ng-container>
 
 </div>

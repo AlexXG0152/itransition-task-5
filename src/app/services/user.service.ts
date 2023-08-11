@@ -1,6 +1,17 @@
 import { Injectable } from '@angular/core';
-import { Faker, SexType, en, en_US, pl, zu_ZA } from '@faker-js/faker';
-import { IUser } from '../interfaces/iuser';
+import {
+  Faker,
+  SexType,
+  en,
+  en_US,
+  pl,
+  fakerPL,
+  de,
+  it,
+  LocaleDefinition,
+} from '@faker-js/faker';
+import { IUser } from '../interfaces/user.interface';
+import { ICountry } from '../interfaces/country.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -8,56 +19,66 @@ import { IUser } from '../interfaces/iuser';
 export class UserService {
   constructor() {}
 
-  faker = new Faker({
-    locale: [en_US, en],
-  });
-  // faker.seed(123);
+  faker!: Faker;
 
-  countries = [
+  countries: ICountry[] = [
     {
-      'United States': [
+      name: 'United States',
+      alternativeNames: [
         'USA',
-        'US',
         'United States',
+        'US',
         'U.S.A.',
         'United States of America',
       ],
+      locale: [en, en_US],
     },
     {
-      'Zulu (South Africa)': [
-        'S.Africa',
-        'SA',
-        'RSA',
-        'South Africa',
-        'Republic of South Africa',
+      name: 'Italy',
+      alternativeNames: [
+        'Italy',
+        'Italia',
+        'IT',
+        'Italian Republic',
+        'Republic of Italy',
       ],
+      locale: [it],
     },
     {
-      'Poland': [
-        'PL',
+      name: 'Poland',
+      alternativeNames: [
         'Poland',
         'Polska',
-        'Rzeczpospolita',
+        'PL',
+        'RP',
         'Rzeczpospolita Polska',
       ],
+      locale: [pl],
     },
   ];
 
   users: IUser[] = [];
 
+  initFaker(locale: any): Faker {
+    return new Faker({
+      locale: locale,
+    });
+  }
+
   clearUsers(): void {
     this.users.length = 0;
   }
 
-  generateUser(stateNames: string): IUser {
+  generateUser(locale: LocaleDefinition[], stateNames: string[]): IUser {
     const gender = `${this.generateGender()}`;
     return {
       number: this.users.length + 1,
       userId: this.faker.string.uuid(),
       gender: gender,
-      fullname: this.generateFullName(gender),
+      fullname: this.generateFullName(locale, gender),
       address: this.generateAddress(
-        this.generateDirection(),
+        locale,
+        this.generateDirection(locale),
         this.generateSecondaryAddress(),
         this.generateState(),
         stateNames
@@ -66,11 +87,15 @@ export class UserService {
     };
   }
 
-  generateUsers(qt: number, state: string) {
+  generateUsers(seed:number, qt: number, state: string): IUser[] {
     const countryNames = this.getCountryNames(state);
+    const locale = this.getCountryLocale(state);
+
+    this.faker = this.initFaker(locale);
+    this.faker.seed(seed)
 
     for (let index = 0; index < qt; index++) {
-      this.users.push(this.generateUser(countryNames));
+      this.users.push(this.generateUser(locale, countryNames));
     }
     return this.users;
   }
@@ -85,9 +110,9 @@ export class UserService {
     ];
   }
 
-  generatePrefix(): string {
+  generatePrefix(gender: string): string {
     return `${this.getRandomFromArray(
-      [this.faker.person.prefix('male' || 'female'), '', ''],
+      [this.faker.person.prefix(gender as SexType), '', ''],
       1
     )}`;
   }
@@ -107,19 +132,27 @@ export class UserService {
     return this.faker.person.firstName(gender as SexType);
   }
 
-  generateFullName(gender: string) {
-    return `${this.generatePrefix()} ${this.generateFirstName(gender)} ${
-      this.generateMiddleName(gender)
-        ? this.generateMiddleName(gender) + ' '
-        : ''
-    }${this.generateLastName(gender)}`.trim();
+  generateFullName(locale: LocaleDefinition[], gender: string) {
+    if (locale[0].metadata?.code === 'en') {
+      return `${this.generatePrefix(gender)} ${this.generateFirstName(
+        gender
+      )} ${
+        this.generateMiddleName(gender)
+          ? this.generateMiddleName(gender) + ' '
+          : ''
+      }${this.generateLastName(gender)}`.trim();
+    } else {
+      return `${this.faker.person.fullName({ sex: gender as SexType })}`.trim();
+    }
   }
 
-  generateDirection(): string {
-    return `${this.getRandomFromArray(
-      [this.faker.location.ordinalDirection({ abbreviated: true }), '', ''],
-      1
-    )}`;
+  generateDirection(locale: LocaleDefinition[]): string {
+    return locale[0].metadata?.code === 'en'
+      ? `${this.getRandomFromArray(
+          [this.faker.location.ordinalDirection({ abbreviated: true }), '', ''],
+          1
+        )}`
+      : '';
   }
 
   generateSecondaryAddress(): string {
@@ -129,40 +162,55 @@ export class UserService {
     ).toLowerCase()}`;
   }
 
+  generateCounty(locale: LocaleDefinition[]) {
+    return locale[0].metadata?.code === 'en'
+      ? this.faker.location.county() + ','
+      : '';
+  }
+
   generateState(): string {
     return this.faker.location.state({ abbreviated: true });
   }
 
-  getCountryNames(select: string): string {
-    const key = this.countries.find((country) =>
-      country.hasOwnProperty(select)
-    );
-    const values = key ? Object.values(key)[0] : null;
+  getCountryNames(select: string): string[] {
+    const country: ICountry = this.countries.find(
+      (item) => item.name === select
+    )!;
+    const values: string[] = country.alternativeNames;
     return values;
   }
 
-  choiseCountryNames(countryNames: string): string {
+  getCountryLocale(select: string): LocaleDefinition[] {
+    const country: ICountry = this.countries.find(
+      (item) => item.name === select
+    )!;
+    const locales: LocaleDefinition[] = country.locale;
+    return locales;
+  }
+
+  choiseCountryNames(countryNames: string[]): string {
     return `${this.getRandomFromArray(countryNames, 1)}`;
   }
 
   generateAddress(
+    locale: LocaleDefinition[],
     direction: string,
     secondaryAddress: string,
     state: string,
-    countryNames: string
+    countryNames: string[]
   ): string {
-    return `${this.faker.location.buildingNumber()}, ${direction} ${this.faker.location.street()}, ${secondaryAddress}, ${this.faker.location.city()}, ${this.faker.location.county()}, ${this.getRandomFromArray(
+    return `${this.faker.location.buildingNumber()}, ${direction} ${this.faker.location.street()}, ${secondaryAddress}, ${this.faker.location.city()}, ${this.generateCounty(
+      locale
+    )}, ${this.getRandomFromArray(
       [`${state}`, `${state + '-'}`, `${state + ' '}`],
       1
     )}${this.getRandomFromArray(
       [
         this.faker.location.zipCode('####'),
         this.faker.location.zipCode('#####'),
-        this.faker.location.zipCode('######'),
       ],
       1
-    )}, ${this.choiseCountryNames(countryNames)}
-      `.replace(', , ', ', ');
+    )}, ${this.choiseCountryNames(countryNames)}`.replaceAll(', , ', ', ').replaceAll(',,', ',');
   }
 
   generatePhoneNumber(): string {

@@ -5,10 +5,11 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './components/home/home.component';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [AppComponent, HomeComponent],
-  imports: [BrowserModule, AppRoutingModule, InfiniteScrollModule],
+  imports: [BrowserModule, AppRoutingModule, FormsModule, InfiniteScrollModule],
   providers: [],
   bootstrap: [AppComponent],
 })
