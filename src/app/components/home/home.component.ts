@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { IUser } from 'src/app/interfaces/user.interface';
 import { StorageService } from 'src/app/services/storage.service';
 import { UserService } from 'src/app/services/user.service';
-import { faker } from '@faker-js/faker';
 
 @Component({
   selector: 'app-home',
@@ -39,9 +38,10 @@ export class HomeComponent {
     if (value === 'Region') {
       return;
     }
-    this.state = value;
-    this.userService.faker.seed(this.storageService.getSeed() || 0);
 
+    this.state = value;
+
+    this.userService.faker.seed(this.storageService.getSeed() || 0);
     this.userService.generateUsers(20, value);
   }
 
@@ -56,9 +56,10 @@ export class HomeComponent {
   }
 
   onRandomClick(): void {
-    const randomNumber = Math.floor(Math.random() * 9999999);
+    const randomNumber = Math.floor(Math.random() * 9_999_999);
     if (this.storageService.getSeed() !== Number(randomNumber)) {
       this.storageService.saveSeed(Number(randomNumber));
+      this.seed = String(randomNumber)
     }
     console.log('from randomNumber', randomNumber);
     this.userService.faker.seed(this.storageService.getSeed());
@@ -67,11 +68,6 @@ export class HomeComponent {
   }
 
   onScroll(): void {
-    // this.seed += 1
     this.userService.generateUsers(10, this.state);
-
-    // .subscribe((newUsers: IUser[]) => {
-    //   this.userService.users.push(...newUsers);
-    // });
   }
 }
