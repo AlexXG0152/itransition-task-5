@@ -102,7 +102,9 @@ export class UserService {
     const locale = this.getCountryLocale(region);
 
     for (let index = 0; index < qt; index++) {
-      this.users.push(this.createUser(locale, countryNames, this.switchFaker(region)));
+      this.users.push(
+        this.createUser(locale, countryNames, this.switchFaker(region))
+      );
     }
   }
 
@@ -212,5 +214,46 @@ export class UserService {
 
   generatePhoneNumber(faker: Faker): string {
     return faker.phone.number().replaceAll('.', '-').split('x')[0].trim();
+  }
+
+  choiceErrorType(inputString: string): string {
+    const randomPosition = Math.floor(Math.random() * 2);
+    const functions = [
+      this.deleteOneRandomSymbolError(inputString),
+      this.addOneRandomSymbolError(inputString, 'w'),
+      this.swapRandomAdjacentCharacters(inputString),
+    ];
+    return functions[randomPosition];
+  }
+
+  deleteOneRandomSymbolError(inputString: string): string {
+    if (inputString.length === 0) {
+      throw new Error('Empty String');
+    }
+
+    const randomIndex = Math.floor(Math.random() * inputString.length);
+    return (
+      inputString.slice(0, randomIndex) + inputString.slice(randomIndex + 1)
+    );
+  }
+
+  addOneRandomSymbolError(inputString: string, newChar: string): string {
+    const randomPosition = Math.floor(Math.random() * inputString.length);
+    return (
+      inputString.slice(0, randomPosition) +
+      newChar +
+      inputString.slice(randomPosition)
+    );
+  }
+
+  swapRandomAdjacentCharacters(inputString: string): string {
+    const characters = inputString.split('');
+    const randomIndex = Math.floor(Math.random() * (characters.length - 1));
+    const temp = characters[randomIndex];
+
+    characters[randomIndex] = characters[randomIndex + 1];
+    characters[randomIndex + 1] = temp;
+
+    return characters.join('');
   }
 }
