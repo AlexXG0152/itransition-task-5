@@ -25,23 +25,23 @@ export class HomeComponent {
 
   errorsQt: Event | number = 0;
 
-  seed!: string;
+  seed: string = '0';
 
-  state: string = this.dropDownData[1];
+  region: string = this.dropDownData[1];
 
   tableData?: IUser[] = this.userService.users;
 
   onOptionsSelected(value: string): void | undefined {
-    this.storageService.saveSeed(0);
+    this.storageService.saveSeed(Number(this.seed));
     this.userService.clearUsers();
 
     if (value === 'Region') {
       return;
     }
 
-    this.state = value;
+    this.region = value;
 
-    this.userService.faker.seed(this.storageService.getSeed() || 0);
+    this.userService.faker.seed(this.storageService.getSeed() + this.page);
     this.userService.generateUsers(20, value);
   }
 
@@ -50,24 +50,24 @@ export class HomeComponent {
       this.storageService.saveSeed(Number(value));
     }
     console.log('from Enter', value);
-    this.userService.faker.seed(this.storageService.getSeed());
+    this.userService.faker.seed(this.storageService.getSeed() + this.page);
     this.userService.clearUsers();
-    this.userService.generateUsers(20, this.state);
+    this.userService.generateUsers(20, this.region);
   }
 
   onRandomClick(): void {
     const randomNumber = Math.floor(Math.random() * 9_999_999);
     if (this.storageService.getSeed() !== Number(randomNumber)) {
       this.storageService.saveSeed(Number(randomNumber));
-      this.seed = String(randomNumber)
+      this.seed = String(randomNumber);
     }
     console.log('from randomNumber', randomNumber);
-    this.userService.faker.seed(this.storageService.getSeed());
+    this.userService.faker.seed(this.storageService.getSeed() + this.page);
     this.userService.clearUsers();
-    this.userService.generateUsers(20, this.state);
+    this.userService.generateUsers(20, this.region);
   }
 
   onScroll(): void {
-    this.userService.generateUsers(10, this.state);
+    this.userService.generateUsers(10, this.region);
   }
 }

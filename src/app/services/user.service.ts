@@ -79,9 +79,9 @@ export class UserService {
     };
   }
 
-  generateUsers(qt: number, state: string): void {
-    const countryNames = this.getCountryNames(state);
-    const locale = this.getCountryLocale(state);
+  generateUsers(qt: number, region: string): void {
+    const countryNames = this.getCountryNames(region);
+    const locale = this.getCountryLocale(region);
 
     // if (!this.faker) {
     //   this.faker = this.initFaker(locale);
