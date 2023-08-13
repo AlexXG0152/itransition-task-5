@@ -2,13 +2,12 @@ import { Injectable } from '@angular/core';
 import { Faker, SexType, en, pl, it, LocaleDefinition } from '@faker-js/faker';
 import { IUser } from '../interfaces/user.interface';
 import { ICountry } from '../interfaces/country.interface';
-import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  constructor(private storageService: StorageService) {}
+  constructor() {}
 
   countries: ICountry[] = [
     {
@@ -48,34 +47,53 @@ export class UserService {
 
   users: IUser[] = [];
 
-  // faker!: Faker;
-  faker: Faker = new Faker({
+  fakerEN: Faker = new Faker({
     locale: [en],
   });
 
-  initFaker(locale: any): Faker {
-    return new Faker({
-      locale: locale,
-    });
+  fakerPL: Faker = new Faker({
+    locale: [pl],
+  });
+
+  fakerIT: Faker = new Faker({
+    locale: [it],
+  });
+
+  switchFaker(locale: string): Faker {
+    switch (locale) {
+      case 'United States':
+        return this.fakerEN;
+      case 'Italy':
+        return this.fakerIT;
+      case 'Poland':
+        return this.fakerPL;
+      default:
+        return this.fakerEN;
+    }
   }
 
   clearUsers(): void {
     this.users.length = 0;
   }
 
-  createUser(locale: LocaleDefinition[], stateNames: string[]): IUser {
+  createUser(
+    locale: LocaleDefinition[],
+    stateNames: string[],
+    faker: Faker
+  ): IUser {
     return {
       number: this.users.length + 1,
-      userId: this.faker.string.uuid(),
-      fullname: this.generateFullName(locale, this.faker.person.sex()),
+      userId: faker.string.uuid(),
+      fullname: this.generateFullName(faker),
       address: this.generateAddress(
         locale,
-        this.generateDirection(locale),
-        this.generateSecondaryAddress(),
-        this.generateState(),
-        stateNames
+        this.generateDirection(locale, faker),
+        this.generateSecondaryAddress(faker),
+        this.generateState(faker),
+        stateNames,
+        faker
       ),
-      phone: this.generatePhoneNumber(),
+      phone: this.generatePhoneNumber(faker),
     };
   }
 
@@ -83,70 +101,69 @@ export class UserService {
     const countryNames = this.getCountryNames(region);
     const locale = this.getCountryLocale(region);
 
-    // if (!this.faker) {
-    //   this.faker = this.initFaker(locale);
-    // }
-
-    // this.faker.seed(this.storageService.getSeed());
     for (let index = 0; index < qt; index++) {
-      this.users.push(this.createUser(locale, countryNames));
+      this.users.push(this.createUser(locale, countryNames, this.switchFaker(region)));
     }
   }
 
-  getRandomFromArray(item: any, qt: number) {
-    return `${this.faker.helpers.arrayElements([...item], qt)}`;
+  getRandomFromArray(item: any, qt: number, faker: Faker) {
+    return `${faker.helpers.arrayElements([...item], qt)}`;
   }
 
-  generatePrefix(gender: string): string {
+  generatePrefix(gender: string, faker: Faker): string {
     return `${this.getRandomFromArray(
-      [this.faker.person.prefix(gender as SexType), '', ''],
-      1
+      [faker.person.prefix(gender as SexType), '', ''],
+      1,
+      faker
     )}`;
   }
 
-  generateFirstName(gender: string): string {
-    return this.faker.person.firstName(gender as SexType);
+  generateFirstName(gender: string, faker: Faker): string {
+    return faker.person.firstName(gender as SexType);
   }
 
-  generateMiddleName(gender: string): string {
+  generateMiddleName(gender: string, faker: Faker): string {
     return `${this.getRandomFromArray(
-      [this.faker.person.middleName(gender as SexType), '', ''],
-      1
+      [faker.person.middleName(gender as SexType), '', ''],
+      1,
+      faker
     )}`;
   }
 
-  generateLastName(gender: string): string {
-    return this.faker.person.firstName(gender as SexType);
+  generateLastName(gender: string, faker: Faker): string {
+    return faker.person.firstName(gender as SexType);
   }
 
-  generateFullName(locale: LocaleDefinition[], gender: string) {
-    return `${this.faker.person.fullName({ sex: gender as SexType })}`.trim();
+  generateFullName(faker: Faker) {
+    return `${faker.person.fullName()}`.trim();
   }
 
-  generateDirection(locale: LocaleDefinition[]): string {
+  generateDirection(locale: LocaleDefinition[], faker: Faker): string {
     return locale[0].metadata?.code === 'en'
       ? `${this.getRandomFromArray(
-          [this.faker.location.ordinalDirection({ abbreviated: true }), '', ''],
-          1
+          [faker.location.ordinalDirection({ abbreviated: true }), '', ''],
+          1,
+          faker
         )}`
       : '';
   }
 
-  generateSecondaryAddress(): string {
+  generateSecondaryAddress(faker: Faker): string {
     return `${this.getRandomFromArray(
-      [this.faker.location.secondaryAddress(), '', ''],
-      1
+      [faker.location.secondaryAddress(), '', ''],
+      1,
+      faker
     ).toLowerCase()}`;
   }
 
-  generateCounty(locale: LocaleDefinition[]) {
+  generateCounty(locale: LocaleDefinition[], faker: Faker) {
     return locale[0].metadata?.code === 'en'
-      ? this.faker.location.county() + ','
+      ? faker.location.county() + ','
       : '';
   }
 
-  generateState(): string {
-    return this.faker.location.state({ abbreviated: true });
+  generateState(faker: Faker): string {
+    return faker.location.state({ abbreviated: true });
   }
 
   getCountryNames(select: string): string[] {
@@ -165,8 +182,8 @@ export class UserService {
     return locales;
   }
 
-  choiseCountryNames(countryNames: string[]): string {
-    return `${this.getRandomFromArray(countryNames, 1)}`;
+  choiseCountryNames(countryNames: string[], faker: Faker): string {
+    return `${this.getRandomFromArray(countryNames, 1, faker)}`;
   }
 
   generateAddress(
@@ -174,25 +191,26 @@ export class UserService {
     direction: string,
     secondaryAddress: string,
     state: string,
-    countryNames: string[]
+    countryNames: string[],
+    faker: Faker
   ): string {
-    return `${this.faker.location.buildingNumber()}, ${direction} ${this.faker.location.street()}, ${secondaryAddress}, ${this.faker.location.city()}, ${this.generateCounty(
-      locale
+    return `${faker.location.buildingNumber()}, ${direction} ${faker.location.street()}, ${secondaryAddress}, ${faker.location.city()}, ${this.generateCounty(
+      locale,
+      faker
     )}, ${this.getRandomFromArray(
       [`${state}`, `${state + '-'}`, `${state + ' '}`],
-      1
+      1,
+      faker
     )}${this.getRandomFromArray(
-      [
-        this.faker.location.zipCode('####'),
-        this.faker.location.zipCode('#####'),
-      ],
-      1
-    )}, ${this.choiseCountryNames(countryNames)}`
+      [faker.location.zipCode('####'), faker.location.zipCode('#####')],
+      1,
+      faker
+    )}, ${this.choiseCountryNames(countryNames, faker)}`
       .replaceAll(', , ', ', ')
       .replaceAll(',,', ',');
   }
 
-  generatePhoneNumber(): string {
-    return this.faker.phone.number().replaceAll('.', '-').split('x')[0].trim();
+  generatePhoneNumber(faker: Faker): string {
+    return faker.phone.number().replaceAll('.', '-').split('x')[0].trim();
   }
 }

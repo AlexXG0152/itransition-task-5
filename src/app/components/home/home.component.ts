@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { it } from '@faker-js/faker';
 import { IUser } from 'src/app/interfaces/user.interface';
 import { StorageService } from 'src/app/services/storage.service';
 import { UserService } from 'src/app/services/user.service';
@@ -8,40 +9,38 @@ import { UserService } from 'src/app/services/user.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
 })
-export class HomeComponent {
-  user: any;
+export class HomeComponent implements OnInit {
   constructor(
     private userService: UserService,
     private storageService: StorageService
   ) {}
+
+  ngOnInit(): void {
+    this.setSeedToFaker(this.region);
+    this.userService.generateUsers(20, this.region);
+  }
+
   throttle = 0;
   distance = 2;
   page = 1;
 
   dropDownData: string[] = [
-    'Region',
     ...this.userService.countries.map((country) => country.name),
   ];
 
   errorsQt: Event | number = 0;
-
   seed: string = '0';
-
-  region: string = this.dropDownData[1];
-
+  region: string = this.dropDownData[0];
   tableData?: IUser[] = this.userService.users;
 
   onOptionsSelected(value: string): void | undefined {
     this.storageService.saveSeed(Number(this.seed));
     this.userService.clearUsers();
 
-    if (value === 'Region') {
-      return;
-    }
-
     this.region = value;
 
-    this.userService.faker.seed(this.storageService.getSeed() + this.page);
+    // this.userService.faker.seed(this.storageService.getSeed() + this.page);
+    this.setSeedToFaker(this.region);
     this.userService.generateUsers(20, value);
   }
 
@@ -49,8 +48,9 @@ export class HomeComponent {
     if (this.storageService.getSeed() !== Number(value)) {
       this.storageService.saveSeed(Number(value));
     }
-    console.log('from Enter', value);
-    this.userService.faker.seed(this.storageService.getSeed() + this.page);
+
+    // this.userService.faker.seed(this.storageService.getSeed() + this.page);
+    this.setSeedToFaker(this.region);
     this.userService.clearUsers();
     this.userService.generateUsers(20, this.region);
   }
@@ -61,13 +61,39 @@ export class HomeComponent {
       this.storageService.saveSeed(Number(randomNumber));
       this.seed = String(randomNumber);
     }
-    console.log('from randomNumber', randomNumber);
-    this.userService.faker.seed(this.storageService.getSeed() + this.page);
+
+    // this.userService.faker.seed(this.storageService.getSeed() + this.page);
+    this.setSeedToFaker(this.region);
     this.userService.clearUsers();
     this.userService.generateUsers(20, this.region);
   }
 
   onScroll(): void {
     this.userService.generateUsers(10, this.region);
+  }
+
+  setSeedToFaker(locale: string) {
+    switch (locale) {
+      case 'United States':
+        this.userService.fakerEN.seed(
+          this.storageService.getSeed() + this.page
+        );
+        break;
+      case 'Italy':
+        this.userService.fakerIT.seed(
+          this.storageService.getSeed() + this.page
+        );
+        break;
+      case 'Poland':
+        this.userService.fakerPL.seed(
+          this.storageService.getSeed() + this.page
+        );
+        break;
+      default:
+        this.userService.fakerEN.seed(
+          this.storageService.getSeed() + this.page
+        );
+        break;
+    }
   }
 }
