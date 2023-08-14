@@ -1,77 +1,109 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { it } from '@faker-js/faker';
 import { IUser } from 'src/app/interfaces/user.interface';
 import { StorageService } from 'src/app/services/storage.service';
 import { UserService } from 'src/app/services/user.service';
-import { faker } from '@faker-js/faker';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
 })
-export class HomeComponent {
-  user: any;
+export class HomeComponent implements OnInit {
   constructor(
     private userService: UserService,
     private storageService: StorageService
   ) {}
+
+  ngOnInit(): void {
+    this.storageService.clear();
+    this.storageService.saveSeed(1)
+    this.setSeedToFaker(this.region);
+    this.userService.generateUsers(20, this.region);
+  }
+
   throttle = 0;
   distance = 2;
   page = 1;
 
   dropDownData: string[] = [
-    'Region',
     ...this.userService.countries.map((country) => country.name),
   ];
 
-  errorsQt: Event | number = 0;
-
-  seed!: string;
-
-  state: string = this.dropDownData[1];
-
+  errorsQt: number = 0;
+  seed: string = '1';
+  region: string = this.dropDownData[0];
   tableData?: IUser[] = this.userService.users;
 
   onOptionsSelected(value: string): void | undefined {
-    this.storageService.saveSeed(0);
+    this.storageService.saveSeed(Number(this.seed));
     this.userService.clearUsers();
 
-    if (value === 'Region') {
-      return;
-    }
+    this.region = value;
 
-    this.state = value;
+    this.setSeedToFaker(this.region);
 
-    this.userService.faker.seed(this.storageService.getSeed() || 0);
-    this.userService.generateUsers(20, value);
+    this.userService.generateUsers(20, this.region);
+  }
+
+  onChangeErrorsQt($event: number) {
+    this.errorsQt = $event
+    this.userService.clearUsers();
+    this.storageService.saveSeed(Number(this.seed))
+    this.setSeedToFaker(this.region);
+    this.userService.generateUsers(20, this.region);
+    this.userService.addErrorsToUsersData($event);
   }
 
   onSeedEnter(value: string): void {
     if (this.storageService.getSeed() !== Number(value)) {
       this.storageService.saveSeed(Number(value));
     }
-    console.log('from Enter', value);
-    this.userService.faker.seed(this.storageService.getSeed());
+
+    this.setSeedToFaker(this.region);
     this.userService.clearUsers();
-    this.userService.generateUsers(20, this.state);
+    this.userService.generateUsers(20, this.region);
   }
 
   onRandomClick(): void {
-    const randomNumber = Math.floor(Math.random() * 9999999);
+    const randomNumber = Math.floor(Math.random() * 9_999_999);
     if (this.storageService.getSeed() !== Number(randomNumber)) {
       this.storageService.saveSeed(Number(randomNumber));
+      this.seed = String(randomNumber);
     }
-    console.log('from randomNumber', randomNumber);
-    this.userService.faker.seed(this.storageService.getSeed());
+
+    // this.userService.faker.seed(this.storageService.getSeed() + this.page);
+    this.setSeedToFaker(this.region);
     this.userService.clearUsers();
-    this.userService.generateUsers(20, this.state);
+    this.userService.generateUsers(20, this.region);
   }
 
   onScroll(): void {
-    this.userService.generateUsers(10, this.state);
+    this.userService.generateUsers(20, this.region);
+  }
 
-    // .subscribe((newUsers: IUser[]) => {
-    //   this.userService.users.push(...newUsers);
-    // });
+  setSeedToFaker(locale: string) {
+    switch (locale) {
+      case 'United States':
+        this.userService.fakerEN.seed(
+          this.storageService.getSeed() + this.page
+        );
+        break;
+      case 'Italy':
+        this.userService.fakerIT.seed(
+          this.storageService.getSeed() + this.page
+        );
+        break;
+      case 'Poland':
+        this.userService.fakerPL.seed(
+          this.storageService.getSeed() + this.page
+        );
+        break;
+      default:
+        this.userService.fakerEN.seed(
+          this.storageService.getSeed() + this.page
+        );
+        break;
+    }
   }
 }

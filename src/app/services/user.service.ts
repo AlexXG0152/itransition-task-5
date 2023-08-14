@@ -48,105 +48,189 @@ export class UserService {
 
   users: IUser[] = [];
 
-  // faker!: Faker;
-  faker: Faker = new Faker({
+  fakerEN: Faker = new Faker({
     locale: [en],
   });
 
-  initFaker(locale: any): Faker {
-    return new Faker({
-      locale: locale,
-    });
+  fakerPL: Faker = new Faker({
+    locale: [pl],
+  });
+
+  fakerIT: Faker = new Faker({
+    locale: [it],
+  });
+
+  switchFaker(locale: string): Faker {
+    switch (locale) {
+      case 'United States':
+        return this.fakerEN;
+      case 'Italy':
+        return this.fakerIT;
+      case 'Poland':
+        return this.fakerPL;
+      default:
+        return this.fakerEN;
+    }
   }
 
   clearUsers(): void {
     this.users.length = 0;
   }
 
-  createUser(locale: LocaleDefinition[], stateNames: string[]): IUser {
+  createUser(
+    locale: LocaleDefinition[],
+    stateNames: string[],
+    faker: Faker
+  ): IUser {
     return {
       number: this.users.length + 1,
-      userId: this.faker.string.uuid(),
-      fullname: this.generateFullName(locale, this.faker.person.sex()),
+      userId: faker.string.uuid(),
+      fullname: this.generateFullName(faker),
       address: this.generateAddress(
         locale,
-        this.generateDirection(locale),
-        this.generateSecondaryAddress(),
-        this.generateState(),
-        stateNames
+        this.generateDirection(locale, faker),
+        this.generateSecondaryAddress(faker),
+        this.generateState(faker),
+        stateNames,
+        faker
       ),
-      phone: this.generatePhoneNumber(),
+      phone: this.generatePhoneNumber(faker),
     };
   }
 
-  generateUsers(qt: number, state: string): void {
-    const countryNames = this.getCountryNames(state);
-    const locale = this.getCountryLocale(state);
+  generateUsers(qt: number, region: string): void {
+    const countryNames = this.getCountryNames(region);
+    const locale = this.getCountryLocale(region);
 
-    // if (!this.faker) {
-    //   this.faker = this.initFaker(locale);
-    // }
-
-    // this.faker.seed(this.storageService.getSeed());
     for (let index = 0; index < qt; index++) {
-      this.users.push(this.createUser(locale, countryNames));
+      let user = this.createUser(
+        locale,
+        countryNames,
+        this.switchFaker(region)
+      );
+      this.users.push(user);
     }
   }
 
-  getRandomFromArray(item: any, qt: number) {
-    return `${this.faker.helpers.arrayElements([...item], qt)}`;
+  addErrorsToUsersData(errQt: number) {
+    const _users = this.users;
+    if (errQt > 0) {
+      const fields = ['fullname', 'address', 'phone'];
+
+      let errorField: keyof IUser | string, errorType: number, errorPos: number;
+
+      _users.map((user) => {
+        for (let index = 0; index < errQt; index++) {
+          const errorsRandom = this.generateRandomSequence(
+            this.storageService.getSeed(),
+            this.roundNumber(errQt, this.storageService.getSeed(), index) * 3
+          );
+
+          let prevField;
+          let prevType;
+          let prevPos;
+
+          for (let i = 0; i < errorsRandom.length; i += 3) {
+            if (i % 1 === 0) {
+              errorField =
+                fields[(errorsRandom[i] % user['address'].length) % 3];
+              if (prevField === errorField) {
+                errorField =
+                  fields[((errorsRandom[i] % user['address'].length) - 1) % 3];
+              } else {
+                prevField = errorField;
+              }
+            }
+            if (i % 2 === 0) {
+              errorType = (errorsRandom[i] % user['fullname'].length) % 3;
+              if (prevType === errorType) {
+                errorType =
+                  ((errorsRandom[i] % user['fullname'].length) - 1) % 3;
+              } else {
+                prevType = errorType;
+              }
+            }
+            if (i % 3 === 0) {
+              errorPos = errorField.length % errorsRandom[i];
+              if (prevPos === errorPos) {
+                errorPos = (errorField.length - 1) % errorsRandom[i];
+              } else {
+                prevPos = errorPos;
+              }
+            }
+            // console.log(errorField!, errorType!, errorPos!);
+
+            this.choiceErrorType(
+              user,
+              errorField! as keyof IUser,
+              errorType!,
+              errorPos!
+            );
+          }
+        }
+      });
+    }
+    // return _users
   }
 
-  generatePrefix(gender: string): string {
+  getRandomFromArray(item: any, qt: number, faker: Faker) {
+    return `${faker.helpers.arrayElements([...item], qt)}`;
+  }
+
+  generatePrefix(gender: string, faker: Faker): string {
     return `${this.getRandomFromArray(
-      [this.faker.person.prefix(gender as SexType), '', ''],
-      1
+      [faker.person.prefix(gender as SexType), '', ''],
+      1,
+      faker
     )}`;
   }
 
-  generateFirstName(gender: string): string {
-    return this.faker.person.firstName(gender as SexType);
+  generateFirstName(gender: string, faker: Faker): string {
+    return faker.person.firstName(gender as SexType);
   }
 
-  generateMiddleName(gender: string): string {
+  generateMiddleName(gender: string, faker: Faker): string {
     return `${this.getRandomFromArray(
-      [this.faker.person.middleName(gender as SexType), '', ''],
-      1
+      [faker.person.middleName(gender as SexType), '', ''],
+      1,
+      faker
     )}`;
   }
 
-  generateLastName(gender: string): string {
-    return this.faker.person.firstName(gender as SexType);
+  generateLastName(gender: string, faker: Faker): string {
+    return faker.person.firstName(gender as SexType);
   }
 
-  generateFullName(locale: LocaleDefinition[], gender: string) {
-    return `${this.faker.person.fullName({ sex: gender as SexType })}`.trim();
+  generateFullName(faker: Faker) {
+    return `${faker.person.fullName()}`.trim();
   }
 
-  generateDirection(locale: LocaleDefinition[]): string {
+  generateDirection(locale: LocaleDefinition[], faker: Faker): string {
     return locale[0].metadata?.code === 'en'
       ? `${this.getRandomFromArray(
-          [this.faker.location.ordinalDirection({ abbreviated: true }), '', ''],
-          1
+          [faker.location.ordinalDirection({ abbreviated: true }), '', ''],
+          1,
+          faker
         )}`
       : '';
   }
 
-  generateSecondaryAddress(): string {
+  generateSecondaryAddress(faker: Faker): string {
     return `${this.getRandomFromArray(
-      [this.faker.location.secondaryAddress(), '', ''],
-      1
+      [faker.location.secondaryAddress(), '', ''],
+      1,
+      faker
     ).toLowerCase()}`;
   }
 
-  generateCounty(locale: LocaleDefinition[]) {
+  generateCounty(locale: LocaleDefinition[], faker: Faker) {
     return locale[0].metadata?.code === 'en'
-      ? this.faker.location.county() + ','
+      ? faker.location.county() + ','
       : '';
   }
 
-  generateState(): string {
-    return this.faker.location.state({ abbreviated: true });
+  generateState(faker: Faker): string {
+    return faker.location.state({ abbreviated: true });
   }
 
   getCountryNames(select: string): string[] {
@@ -165,8 +249,8 @@ export class UserService {
     return locales;
   }
 
-  choiseCountryNames(countryNames: string[]): string {
-    return `${this.getRandomFromArray(countryNames, 1)}`;
+  choiseCountryNames(countryNames: string[], faker: Faker): string {
+    return `${this.getRandomFromArray(countryNames, 1, faker)}`;
   }
 
   generateAddress(
@@ -174,25 +258,151 @@ export class UserService {
     direction: string,
     secondaryAddress: string,
     state: string,
-    countryNames: string[]
+    countryNames: string[],
+    faker: Faker
   ): string {
-    return `${this.faker.location.buildingNumber()}, ${direction} ${this.faker.location.street()}, ${secondaryAddress}, ${this.faker.location.city()}, ${this.generateCounty(
-      locale
-    )}, ${this.getRandomFromArray(
-      [`${state}`, `${state + '-'}`, `${state + ' '}`],
-      1
-    )}${this.getRandomFromArray(
-      [
-        this.faker.location.zipCode('####'),
-        this.faker.location.zipCode('#####'),
-      ],
-      1
-    )}, ${this.choiseCountryNames(countryNames)}`
-      .replaceAll(', , ', ', ')
-      .replaceAll(',,', ',');
+    if (locale[0].metadata?.code === 'en') {
+      return `${faker.location.buildingNumber()}, ${direction} ${faker.location.street()}, ${secondaryAddress}, ${faker.location.city()}, ${this.generateCounty(
+        locale,
+        faker
+      )}, ${this.getRandomFromArray(
+        [`${state}`, `${state + '-'}`, `${state + ' '}`],
+        1,
+        faker
+      )}${this.getRandomFromArray(
+        [faker.location.zipCode('####'), faker.location.zipCode('#####')],
+        1,
+        faker
+      )}, ${this.choiseCountryNames(countryNames, faker)}`
+        .replaceAll(', , ', ', ')
+        .replaceAll(',,', ',');
+    } else {
+      return `${direction} ${faker.location.street()}, ${faker.location.buildingNumber()}, ${secondaryAddress}, ${faker.location.city()}, ${this.generateCounty(
+        locale,
+        faker
+      )}, ${this.getRandomFromArray(
+        [`${state}`, `${state + '-'}`, `${state + ' '}`],
+        1,
+        faker
+      )}${this.getRandomFromArray(
+        [faker.location.zipCode('####'), faker.location.zipCode('#####')],
+        1,
+        faker
+      )}, ${this.choiseCountryNames(countryNames, faker)}`
+        .replaceAll(', , ', ', ')
+        .replaceAll(',,', ',');
+    }
   }
 
-  generatePhoneNumber(): string {
-    return this.faker.phone.number().replaceAll('.', '-').split('x')[0].trim();
+  generatePhoneNumber(faker: Faker): string {
+    return faker.phone.number().replaceAll('.', '-').split('x')[0].trim();
+  }
+
+  choiceErrorType(
+    user: IUser,
+    errorField: keyof IUser,
+    errorType: number,
+    errorPos: number
+  ): IUser {
+    const functions = [
+      this.deleteOneRandomSymbolError(user, errorField, errorPos),
+      this.addOneRandomSymbolError(user, errorField, errorPos),
+      this.swapRandomAdjacentCharacters(user, errorField, errorPos),
+    ];
+    return functions[errorType];
+  }
+
+  deleteOneRandomSymbolError(
+    user: IUser,
+    errorField: keyof IUser,
+    errorPos: number
+  ): IUser {
+    if ((user[errorField] as string)[errorPos] === ' ') {
+      errorPos = errorPos + 1;
+    }
+    (user[errorField] as string) =
+      (user[errorField] as string).slice(0, errorPos) +
+      (user[errorField] as string).slice(errorPos + 1);
+    return user;
+  }
+
+  addOneRandomSymbolError(
+    user: IUser,
+    errorField: keyof IUser,
+    errorPos: number
+  ): IUser {
+    if ((user[errorField] as string)[errorPos] === ' ') {
+      errorPos = errorPos + 1;
+    }
+    let newChar;
+
+    if (
+      !!(user[errorField] as string).includes(
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+      )
+    ) {
+      newChar = '0123456789'.split('')[errorPos] || '';
+    } else {
+      newChar =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('')[
+          errorPos
+        ] || 'r';
+    }
+
+    if (errorPos < errorPos || errorPos > (user[errorField] as string).length) {
+      console.error('Index is out of range');
+    }
+
+    (user[errorField] as string) =
+      (user[errorField] as string).slice(0, errorPos) +
+      newChar +
+      (user[errorField] as string).slice(errorPos);
+
+    return user;
+  }
+
+  swapRandomAdjacentCharacters(
+    user: IUser,
+    errorField: keyof IUser,
+    errorPos: number
+  ): IUser {
+    const characters = (user[errorField] as string).split('');
+    if ((user[errorField] as string)[errorPos] === ' ') {
+      errorPos = errorPos + 1;
+    }
+    const temp = characters[errorPos];
+
+    characters[errorPos] = characters[errorPos + 1];
+    characters[errorPos + 1] = temp;
+    (user[errorField] as string) = characters.join('');
+
+    return user;
+  }
+
+  generateRandomSequence(seed: number, length: number): number[] {
+    const sequence: number[] = [];
+    let currentValue = seed;
+
+    for (let i = 0; i < length; i++) {
+      currentValue = (currentValue * 16807) % 2147483647;
+      sequence.push(currentValue);
+    }
+
+    return sequence;
+  }
+
+  roundNumber(errQt: number, seed: number, iteration: number): number {
+    const roundedNum = Math.round(errQt);
+    const adjustment = seed + iteration;
+
+    if (errQt % 1 === 0.5) {
+      if (adjustment % 2 === 0) {
+        return Math.floor(errQt);
+      } else {
+        return Math.ceil(errQt);
+      }
+    }
+
+    return roundedNum;
   }
 }
