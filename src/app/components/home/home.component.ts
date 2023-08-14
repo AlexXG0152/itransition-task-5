@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { it } from '@faker-js/faker';
 import { IUser } from 'src/app/interfaces/user.interface';
+import { ErrorService } from 'src/app/services/error.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { UserService } from 'src/app/services/user.service';
 
@@ -12,12 +13,13 @@ import { UserService } from 'src/app/services/user.service';
 export class HomeComponent implements OnInit {
   constructor(
     private userService: UserService,
-    private storageService: StorageService
+    private storageService: StorageService,
+    private errorService: ErrorService
   ) {}
 
   ngOnInit(): void {
     this.storageService.clear();
-    this.storageService.saveSeed(1)
+    this.storageService.saveSeed(1);
     this.setSeedToFaker(this.region);
     this.userService.generateUsers(20, this.region);
   }
@@ -36,6 +38,7 @@ export class HomeComponent implements OnInit {
   tableData?: IUser[] = this.userService.users;
 
   onOptionsSelected(value: string): void | undefined {
+    this.errorsQt = 0;
     this.storageService.saveSeed(Number(this.seed));
     this.userService.clearUsers();
 
@@ -47,15 +50,30 @@ export class HomeComponent implements OnInit {
   }
 
   onChangeErrorsQt($event: number) {
-    this.errorsQt = $event
+    this.errorsQt = $event;
     this.userService.clearUsers();
-    this.storageService.saveSeed(Number(this.seed))
+    this.storageService.saveSeed(Number(this.seed));
     this.setSeedToFaker(this.region);
     this.userService.generateUsers(20, this.region);
-    this.userService.addErrorsToUsersData($event);
+
+    for (let i = 0; i < this.userService.users.length; i++) {
+      this.userService.users[i].fullname = this.errorService.generateWithErrors(
+        this.userService.users[i].fullname,
+        this.errorsQt
+      );
+      this.userService.users[i].address = this.errorService.generateWithErrors(
+        this.userService.users[i].address,
+        this.errorsQt
+      );
+      this.userService.users[i].phone = this.errorService.generateWithErrors(
+        this.userService.users[i].phone,
+        this.errorsQt
+      );
+    }
   }
 
   onSeedEnter(value: string): void {
+    this.errorsQt = 0;
     if (this.storageService.getSeed() !== Number(value)) {
       this.storageService.saveSeed(Number(value));
     }
@@ -66,6 +84,7 @@ export class HomeComponent implements OnInit {
   }
 
   onRandomClick(): void {
+    this.errorsQt = 0;
     const randomNumber = Math.floor(Math.random() * 9_999_999);
     if (this.storageService.getSeed() !== Number(randomNumber)) {
       this.storageService.saveSeed(Number(randomNumber));
