@@ -16,6 +16,8 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.storageService.clear();
+    this.storageService.saveSeed(1)
     this.setSeedToFaker(this.region);
     this.userService.generateUsers(20, this.region);
   }
@@ -28,8 +30,8 @@ export class HomeComponent implements OnInit {
     ...this.userService.countries.map((country) => country.name),
   ];
 
-  errorsQt: Event | number = 0;
-  seed: string = '0';
+  errorsQt: number = 0;
+  seed: string = '1';
   region: string = this.dropDownData[0];
   tableData?: IUser[] = this.userService.users;
 
@@ -39,9 +41,18 @@ export class HomeComponent implements OnInit {
 
     this.region = value;
 
-    // this.userService.faker.seed(this.storageService.getSeed() + this.page);
     this.setSeedToFaker(this.region);
-    this.userService.generateUsers(20, value);
+
+    this.userService.generateUsers(20, this.region);
+  }
+
+  onChangeErrorsQt($event: number) {
+    this.errorsQt = $event
+    this.userService.clearUsers();
+    this.storageService.saveSeed(Number(this.seed))
+    this.setSeedToFaker(this.region);
+    this.userService.generateUsers(20, this.region);
+    this.userService.addErrorsToUsersData($event);
   }
 
   onSeedEnter(value: string): void {
@@ -49,7 +60,6 @@ export class HomeComponent implements OnInit {
       this.storageService.saveSeed(Number(value));
     }
 
-    // this.userService.faker.seed(this.storageService.getSeed() + this.page);
     this.setSeedToFaker(this.region);
     this.userService.clearUsers();
     this.userService.generateUsers(20, this.region);
@@ -69,7 +79,7 @@ export class HomeComponent implements OnInit {
   }
 
   onScroll(): void {
-    this.userService.generateUsers(10, this.region);
+    this.userService.generateUsers(20, this.region);
   }
 
   setSeedToFaker(locale: string) {
