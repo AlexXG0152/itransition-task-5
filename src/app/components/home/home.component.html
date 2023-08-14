@@ -17,8 +17,8 @@
       <div class="input-group">
         <span class="input-group-text">Errors Qt.</span>
         <div class="form-floating">
-          <input type="range" class="form-control slider" id="errorsSlider" min="0" max="10" step="0.25" value="0"
-            [(ngModel)]="this.errorsQt">
+          <input type="range" class="form-control slider" id="errorsSlider" min="0" max="10" step="0.5" value="0"
+            [(ngModel)]="this.errorsQt" (change)="onChangeErrorsQt($any($event.target)?.value)">
           <label for="customRange1" class="form-label">{{this.errorsQt}}</label>
         </div>
       </div>
@@ -28,7 +28,7 @@
         <span class="input-group-text">Errors Qt.</span>
         <div class="form-floating">
           <input type="number" class="form-control" id="errorsInput" min="0" max="10000" value="{{this.errorsQt}}"
-            [(ngModel)]="this.errorsQt">
+            [(ngModel)]="this.errorsQt" (change)="onChangeErrorsQt($any($event.target)?.value)">
           <label for="errorsInput">Errors Qt.</label>
         </div>
       </div>
