@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { IUser } from '../interfaces/user.interface';
 
 const SEED = 'seed';
+const ERRORS = 'errors';
 
 @Injectable({
   providedIn: 'root',
@@ -11,12 +11,21 @@ export class StorageService {
     window.localStorage.clear();
   }
 
-  public saveSeed(seed: number): void {
+  saveSeed(seed: number): void {
     window.localStorage.removeItem(SEED);
     window.localStorage.setItem(SEED, seed.toString());
   }
 
-  public getSeed(): number {
+  getSeed(): number {
     return Number(localStorage.getItem(SEED));
+  }
+
+  saveErrors(errors: number): void {
+    window.localStorage.removeItem(ERRORS);
+    window.localStorage.setItem(ERRORS, errors.toString());
+  }
+
+  getErrors(): number {
+    return Number(localStorage.getItem(ERRORS));
   }
 }

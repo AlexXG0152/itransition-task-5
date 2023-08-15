@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { it } from '@faker-js/faker';
 import { IUser } from 'src/app/interfaces/user.interface';
 import { ErrorService } from 'src/app/services/error.service';
 import { StorageService } from 'src/app/services/storage.service';
@@ -20,6 +19,7 @@ export class HomeComponent implements OnInit {
   ngOnInit(): void {
     this.storageService.clear();
     this.storageService.saveSeed(1);
+    this.storageService.saveErrors(0);
     this.setSeedToFaker(this.region);
     this.userService.generateUsers(20, this.region);
   }
@@ -53,23 +53,16 @@ export class HomeComponent implements OnInit {
     this.errorsQt = $event;
     this.userService.clearUsers();
     this.storageService.saveSeed(Number(this.seed));
+    this.storageService.saveErrors(this.errorsQt);
     this.setSeedToFaker(this.region);
     this.userService.generateUsers(20, this.region);
 
-    for (let i = 0; i < this.userService.users.length; i++) {
-      this.userService.users[i].fullname = this.errorService.generateWithErrors(
-        this.userService.users[i].fullname,
+    this.userService.users.map((_i, index) => {
+      this.errorService.generateWithErrors(
+        this.userService.users[index],
         this.errorsQt
       );
-      this.userService.users[i].address = this.errorService.generateWithErrors(
-        this.userService.users[i].address,
-        this.errorsQt
-      );
-      this.userService.users[i].phone = this.errorService.generateWithErrors(
-        this.userService.users[i].phone,
-        this.errorsQt
-      );
-    }
+    });
   }
 
   onSeedEnter(value: string): void {
